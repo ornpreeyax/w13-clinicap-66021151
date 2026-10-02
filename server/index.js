@@ -34,6 +34,25 @@ app.get('/appointments', async (_req, res, next) => {
 });
 
 app.post('/appointments', async (req, res, next) => {
+
+// delete appointment by id
+app.delete('/appointments/:id', async (req, res, next) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ error: 'invalid_id' });
+  }
+  try {
+    const pool = await getSqlPool();
+    const r = await pool.request()
+      .input('id', sql.Int, id)
+      .query('DELETE FROM appointments WHERE id = @id');
+    if (r.rowsAffected[0] === 0) {
+      return res.status(404).json({ error: 'not_found' });
+    }
+    res.json({ ok: true });
+  } catch (e) { next(e); }
+});
+
   const { doctor_id, patient_name, slot } = req.body || {};
   if (!doctor_id || !patient_name || !slot) {
     return res.status(400).json({ error: 'doctor_id, patient_name, slot are required' });
